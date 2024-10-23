@@ -25,13 +25,27 @@ def ASIP_inst_gen(opcode, spi_data_size, data_num, start_addr, end_addr=0, choos
     if ((opcode==1)|(opcode==2)):
         opcode_bin = dec_to_bin_str(opcode, 4)
         TBD_bin = dec_to_bin_str(0, 9)
-        spi_data_size_bin = dec_to_bin_str(spi_data_size, 3)
+        match spi_data_size:
+            case 64:
+                spi_data_size_encode = 3
+            case 32:
+                spi_data_size_encode = 2
+            case 16:
+                spi_data_size_encode = 1
+            case 8:
+                spi_data_size_encode = 0
+            case _:
+                spi_data_size_encode = 3
+                raise ValueError("Invalid spi_data_size value")
+        spi_data_size_bin = dec_to_bin_str(spi_data_size_encode, 3)
+
         if (choose_data_num==1):
             start_addr_plus_data_num = (hex_to_dec_value(start_addr))\
                 + int(spi_data_size/4 * data_num)
             end_addr_bin = dec_to_bin_str(int(start_addr_plus_data_num), 24)
         else:
             end_addr_bin = hex_to_bin_str(end_addr, 24)
+
         start_addr_bin = hex_to_bin_str(start_addr, 24)
         ASIP_inst_bin = opcode_bin + TBD_bin + spi_data_size_bin\
             + end_addr_bin + start_addr_bin
