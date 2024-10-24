@@ -20,41 +20,57 @@ def hex_to_dec_value(hex_num):
     dec_value = int(hex_num, 16)
     return dec_value
 # Compiler
-def ASIP_inst_gen(opcode, spi_data_size, data_num, start_addr, end_addr=0, choose_data_num=0):
+def ASIP_inst_gen(opcode, start_addr, spi_data_size=64, end_addr=0, choose_data_num=0, data_num=0):
     # LOAD & DUMP
-    if ((opcode==1)|(opcode==2)):
+    if ((opcode==1)|(opcode==2)|(opcode==3)):
         opcode_bin = dec_to_bin_str(opcode, 4)
         TBD_bin = dec_to_bin_str(0, 9)
         match spi_data_size:
             case 64:
-                spi_data_size_encode = 3
-            case 32:
-                spi_data_size_encode = 2
-            case 16:
-                spi_data_size_encode = 1
-            case 8:
                 spi_data_size_encode = 0
-            case _:
+            case 32:
+                spi_data_size_encode = 1
+            case 16:
+                spi_data_size_encode = 2
+            case 8:
                 spi_data_size_encode = 3
-                raise ValueError("Invalid spi_data_size value")
+            case _:
+                spi_data_size_encode = 0
         spi_data_size_bin = dec_to_bin_str(spi_data_size_encode, 3)
 
         if (choose_data_num==1):
+            start_addr_plus_data_num = (hex_to_dec_value(start_addr)) \
+                + int(spi_data_size/8 * (data_num-1))
+            end_addr_bin = dec_to_bin_str(int(start_addr_plus_data_num), 24)
+        else:
+            end_addr_bin = hex_to_bin_str(end_addr, 24)
+        
+        start_addr_bin = hex_to_bin_str(start_addr, 24)
+
+        ASIP_inst_bin = opcode_bin + TBD_bin + spi_data_size_bin \
+            + end_addr_bin + start_addr_bin
+
+    elif ((opcode==9)):
+        opcode_bin = dec_to_bin_str(opcode, 4)
+        TBD_bin = dec_to_bin_str(0, 12)
+
+        if (choose_data_num==1):
             start_addr_plus_data_num = (hex_to_dec_value(start_addr))\
-                + int(spi_data_size/4 * data_num)
+                + int(spi_data_size/8 * (data_num-1))
             end_addr_bin = dec_to_bin_str(int(start_addr_plus_data_num), 24)
         else:
             end_addr_bin = hex_to_bin_str(end_addr, 24)
 
         start_addr_bin = hex_to_bin_str(start_addr, 24)
-        ASIP_inst_bin = opcode_bin + TBD_bin + spi_data_size_bin\
-            + end_addr_bin + start_addr_bin
+        
+        ASIP_inst_bin = opcode_bin + TBD_bin + end_addr_bin + start_addr_bin
     # change to hex type
     ASIP_inst_dec       = int(ASIP_inst_bin, 2)
     ASIP_inst_hex       = dec_to_hex_str(ASIP_inst_dec, 8)
     return ASIP_inst_hex
+# txt generator
 def ASIP_txt_gen(ASIP_inst_str, file_name):
-    ASIP_inst_32bit = ASIP_inst_str.zfill(8)
+    ASIP_inst_64bit = ASIP_inst_str.zfill(8)
     with open(file_name, 'w') as f:
         f.write(ASIP_inst_32bit)
     return ASIP_inst_32bit
